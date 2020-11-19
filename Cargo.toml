@@ -1,0 +1,10 @@
+[workspace]
+members = ["m64"]
+
+[package]
+name = "ultratracker"
+version = "0.1.0"
+authors = ["Delta-Psi <delta.psi00@gmail.com>"]
+edition = "2018"
+
+[dependencies]
