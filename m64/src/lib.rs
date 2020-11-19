@@ -180,6 +180,14 @@ impl SequenceCmd {
             _ => unimplemented!("sequence command 0x{:02}", data[0]),
         }
     }
+
+    pub fn is_end(&self) -> bool {
+        if let SequenceCmd::End = self {
+            true
+        } else {
+            false
+        }
+    }
 }
 
 /*
