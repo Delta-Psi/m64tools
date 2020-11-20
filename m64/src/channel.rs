@@ -2,6 +2,23 @@ use byteorder::{ByteOrder, BE};
 use super::read_var;
 
 #[derive(Debug)]
+pub struct LinearEnvelope {
+    pub start_value: u8,
+    pub end_value: u8,
+    pub period: u8,
+}
+
+impl LinearEnvelope {
+    pub fn constant(value: u8) -> Self {
+        Self {
+            start_value: value,
+            end_value: value,
+            period: 0,
+        }
+    }
+}
+
+#[derive(Debug)]
 pub enum ChannelCmd {
     /// End of script, loop or function
     End,

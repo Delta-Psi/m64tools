@@ -8,3 +8,4 @@ authors = ["Delta-Psi <delta.psi00@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+m64 = { path = "m64" }
