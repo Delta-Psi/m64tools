@@ -2,6 +2,7 @@
 
 pub mod sequence;
 pub mod channel;
+pub mod layer;
 
 fn read_var(data: &[u8]) -> (u16, usize) {
     // check top bit of data[0]
