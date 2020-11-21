@@ -13,13 +13,10 @@ bitflags! {
     }
 }
 
-#[derive(Debug)]
-pub enum NotePriority {
-    Disabled = 0,
-    Stopping = 1,
-    Min = 2,
-    Default = 3,
-}
+//const NOTE_PRIORITY_DISABLED: u8 = 0;
+//const NOTE_PRIORITY_STOPPING: u8 = 1;
+//const NOTE_PRIORITY_MIN: u8 = 2;
+const NOTE_PRIORITY_DEFAULT: u8 = 3;
 
 #[derive(Debug)]
 pub struct ScriptState {
@@ -220,14 +217,17 @@ impl SequencePlayer {
 
                     // ...
 
-                    _ => unimplemented!("{:x?}", cmd),
+                    _ => unimplemented!("player cmd {:x?}", cmd),
                 }
             }
         }
 
-        for channel_slot in &mut self.channels {
-            if let Some(channel) = channel_slot {
-                channel.process(data);
+        for i in 0 .. self.channels.len() {
+            if self.channels[i].is_some() {
+                // workaround so we can borrow self and the channel at the same time
+                let mut channel = std::mem::replace(&mut self.channels[i], None);
+                channel.as_mut().unwrap().process(&self, data);
+                drop(std::mem::replace(&mut self.channels[i], channel));
             }
         }
     }
@@ -279,7 +279,7 @@ pub struct SequenceChannel {
     //pub note_allocation_policy: u8,
     //pub mute_behavior: MuteBehavior,
     pub reverb: u8,
-    pub note_priority: NotePriority,
+    pub note_priority: u8,
     //pub bank_id: u8,
     //pub updates_per_frame_unused,
     pub vibrato_rate_start: u16,
@@ -325,7 +325,7 @@ impl SequenceChannel {
             pan: 0.5,
             pan_channel_weight: 1.0,
             reverb: 0,
-            note_priority: NotePriority::Default,
+            note_priority: NOTE_PRIORITY_DEFAULT,
             delay: 0,
             //adsr:
             vibrato_rate_target: 0x800,
@@ -344,18 +344,161 @@ impl SequenceChannel {
         }
     }
 
-    pub fn process(&mut self, _data: &[u8]) {
-        // TODO
+    // ported from sequence_channel_process_script
+    pub fn process(&mut self, player: &SequencePlayer, data: &[u8]) {
+        if !self.enabled {
+            return;
+        }
+
+        if self.stop_script {
+            for layer_slot in &mut self.layers {
+                if let Some(layer) = layer_slot {
+                    layer.process(data);
+                }
+            }
+            return;
+        }
+
+        if player.muted && player.mute_behavior.contains(MuteBehavior::STOP_SCRIPT) {
+            return;
+        }
+
+        if self.delay != 0 {
+            self.delay -= 1;
+        }
+
+        if self.delay == 0 {
+            loop {
+                use crate::channel::ChannelCmd::{self, *};
+                let (cmd, size) = ChannelCmd::read(&data[self.script_state.pc as usize..]);
+                self.script_state.pc += size as u16;
+                println!("{:x?}", cmd);
+
+                let state = &mut self.script_state;
+                match cmd {
+                    End => {
+                        if state.depth == 0 {
+                            self.enabled = false;
+                            self.finished = true;
+                            break;
+                        }
+                        state.depth -= 1;
+                        state.pc = state.stack[state.depth];
+                    },
+
+                    Delay1 => {
+                        break;
+                    },
+                    Delay(delay) => {
+                        self.delay = delay;
+                    },
+
+                    // ...
+
+                    LargeNotesOn => {
+                        self.large_notes = true;
+                    }
+                    SetLayer(j, addr) => {
+                        // from seq_channel_set_layer
+                        // NOTE: does not check for the global layer limit
+                        if self.layers[j as usize].is_some() {
+                            // TODO: seq_channel_layer_note_decay
+                        }
+
+                        let layer = SequenceLayer::new(addr, &self);
+                        self.layers[j as usize] = Some(Box::new(layer));
+                    }
+                    SetVol(vol) => {
+                        self.volume = vol as f32 / 127.0;
+                    }
+                    SetNotePriority(np) => {
+                        self.note_priority = np;
+                    }
+                    SetPan(pan) => {
+                        self.pan = pan as f32 / 128.0;
+                    }
+                    SetReverb(reverb) => {
+                        self.reverb = reverb;
+                    }
+                    SetInstr(_) => {
+                        // big fat TODO
+                    }
+
+                    _ => unimplemented!("channel cmd {:x?}", cmd),
+                }
+            }
+        }
+
+        for j in 0 .. self.layers.len() {
+            if self.layers[j].is_some() {
+                /*
+                // workaround so we can borrow self and the channel at the same time
+                let mut channel = std::mem::replace(&mut self.channels[i], None);
+                channel.as_mut().unwrap().process(&self, data);
+                drop(std::mem::replace(&mut self.channels[i], channel));
+                */
+                self.layers[j].as_mut().unwrap().process(data);
+            }
+        }
     }
 }
 
 #[derive(Debug)]
 pub struct SequenceLayer {
+    pub enabled: bool,
+    pub finished: bool,
+    pub stop_something: bool,
+    pub continuous_notes: bool,
+    //pub status: u8,
+    pub note_duration: u8,
+    //pub portamento_target_note: u8,
+    //portamento
+    //adsr
+    //portamento_time: u16,
+    transposition: i16,
+    //freq_scale: f32,
+    velocity_square: f32,
+    pan: f32,
+    //note_velocity: f32,
+    //note_pan: f32,
+    //note_freq_scale: f32,
+    //short_note_default_play_percentage: i16,
+    //play_percentage: i16,
+    delay: i16,
+    duration: i16,
+    delay_unused: i16,
+    //note
+    //instrument
+    //sound
+    //seq_channel
+    script_state: ScriptState,
+    //listItem
 }
 
 impl SequenceLayer {
-    pub fn new() -> Self {
+    pub fn new(addr: u16, _channel: &SequenceChannel) -> Self {
         Self {
+            //adsr: channel.adsr,
+            //adsr.release_rate: 0
+            enabled: true,
+            stop_something: false,
+            continuous_notes: false,
+            finished: false,
+            //portamento.mode: 0
+            script_state: ScriptState::new(addr),
+            //status: not loaded
+            note_duration: 0x80,
+            transposition: 0,
+            delay: 0,
+            duration: 0,
+            delay_unused: 0,
+            //note: None
+            //instrument: NOne
+            velocity_square: 0.0,
+            pan: 0.0,
         }
+    }
+
+    pub fn process(&mut self, _data: &[u8]) {
     }
 }
