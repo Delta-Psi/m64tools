@@ -4,6 +4,8 @@ pub mod sequence;
 pub mod channel;
 pub mod layer;
 
+pub mod state;
+
 fn read_var(data: &[u8]) -> (u16, usize) {
     // check top bit of data[0]
     if data[0] & 0b1000_0000 == 0 {
