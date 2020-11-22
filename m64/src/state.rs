@@ -557,6 +557,12 @@ impl SequenceLayer {
                     break;
                 },
 
+                Call(addr) => {
+                    state.stack[state.depth] = state.pc;
+                    state.depth += 1;
+                    state.pc = addr;
+                },
+
                 Note0 { percentage, duration, velocity, pitch } => {
                     // TODO
                     self.stop_something = false;
@@ -564,7 +570,7 @@ impl SequenceLayer {
                     self.play_percentage = Some(percentage as i16);
                     self.velocity_square = (velocity as f32).powi(2);
                     self.delay = percentage as i16;
-                    self.duration = self.note_duration as i16 * percentage as i16 / 256;
+                    self.duration = (self.note_duration as u32 * percentage as u32 / 256) as i16;
 
                     // TODO: etc
                     self.pitch = Some(pitch);
@@ -575,7 +581,7 @@ impl SequenceLayer {
                     self.play_percentage = Some(percentage as i16);
                     self.velocity_square = (velocity as f32).powi(2);
                     self.delay = percentage as i16;
-                    self.duration = self.note_duration as i16 * percentage as i16 / 256;
+                    self.duration = (self.note_duration as u32 * percentage as u32 / 256) as i16;
 
                     self.pitch = Some(pitch);
                     break;
@@ -586,7 +592,7 @@ impl SequenceLayer {
                     self.velocity_square = (velocity as f32).powi(2);
                     let percentage = self.play_percentage.unwrap();
                     self.delay = percentage as i16;
-                    self.duration = self.note_duration as i16 * percentage as i16 / 256;
+                    self.duration = (self.note_duration as u32 * percentage as u32 / 256) as i16;
 
                     self.pitch = Some(pitch);
                     break;
