@@ -3,7 +3,14 @@ use bitflags::bitflags;
 const CHANNELS_MAX: u8 = 16;
 const LAYERS_MAX: u8 = 4;
 
-const TEMPO_SCALE: u16 = 48;
+const TATUMS_PER_BEAT: u16 = 48;
+const TEMPO_SCALE: u16 = TATUMS_PER_BEAT;
+
+// AudioSessionSettings stuff i dont really understand
+const FREQUENCY: u32 = 32000;
+const SAMPLES_PER_FRAME_TARGET: u32 = FREQUENCY / 60;
+const UPDATES_PER_FRAME: u32 = SAMPLES_PER_FRAME_TARGET / 160 + 1;
+const TEMPO_INTERNAL_TO_EXTERNAL: u32 = (UPDATES_PER_FRAME as f32 * 2_880_000.0 / TATUMS_PER_BEAT as f32 / 16.713) as u32;
 
 bitflags! {
     pub struct MuteBehavior: u8 {
@@ -101,12 +108,11 @@ impl SequencePlayer {
         }
 
         // Check if we surpass the number of ticks needed for a tatum, else stop.
-        /*self.tempo_acc += self.tempo;
-        if self.tempo_acc < gTempoInternalToExternal {
+        self.tempo_acc += self.tempo;
+        if self.tempo_acc < TEMPO_INTERNAL_TO_EXTERNAL as u16 {
             return;
         }
-        self.tempo_acc -= self.gTempoInternalToExternal;
-        FIXME: idk what this even means */
+        self.tempo_acc -= TEMPO_INTERNAL_TO_EXTERNAL as u16;
 
         if self.delay > 1 {
             self.delay -= 1;
@@ -546,7 +552,7 @@ impl SequenceLayer {
                     break;
                 },
 
-                Note0 { pitch, percentage, velocity, duration } => {
+                Note0 { percentage, duration, velocity, .. } => {
                     // TODO
                     self.stop_something = false;
                     self.note_duration = duration;
@@ -558,7 +564,7 @@ impl SequenceLayer {
                     // TODO: etc
                     break;
                 },
-                Note1 { pitch, percentage, velocity } => {
+                Note1 { percentage, velocity, .. } => {
                     self.note_duration = 0;
                     self.play_percentage = Some(percentage as i16);
                     self.velocity_square = (velocity as f32).powi(2);
@@ -566,7 +572,7 @@ impl SequenceLayer {
                     self.duration = self.note_duration as i16 * percentage as i16 / 256;
                     break;
                 },
-                Note2 { pitch, velocity, duration } => {
+                Note2 {  duration, velocity, .. } => {
                     self.stop_something = false;
                     self.note_duration = duration;
                     self.velocity_square = (velocity as f32).powi(2);
