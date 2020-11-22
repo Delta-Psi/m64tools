@@ -5,5 +5,5 @@ fn main() {
     std::io::stdin().read_to_end(&mut data).unwrap();
 
     let aiff = aiff::Aiff::read(&data).unwrap();
-    println!("{:#?}", aiff);
+    println!("{:#x?}", aiff.comm);
 }
