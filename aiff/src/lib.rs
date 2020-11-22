@@ -1,146 +1,16 @@
 //! Basic support for Audio IFF file reading.
 
-use byteorder::{BE, ByteOrder};
+mod error;
+pub use error::{AiffError, Result};
+
+pub mod types;
+use types::*;
+
+pub mod chunks;
+use chunks::*;
+
 use std::collections::HashMap;
 use std::convert::TryInto;
-use std::fmt;
-use std::time::Duration;
-
-use thiserror::Error;
-#[derive(Error, Debug)]
-pub enum AiffError {
-    #[error("invalid format")]
-    InvalidFormat,
-    #[error("form type is not AIFF")]
-    InvalidFormType,
-    #[error("missing common chunk")]
-    MissingComm,
-}
-
-pub type Result<T> = std::result::Result<T, AiffError>;
-
-#[derive(Hash, PartialEq, Eq)]
-pub struct ID([u8; 4]);
-
-impl ID {
-    pub fn data(&self) -> &[u8] {
-        &self.0
-    }
-}
-
-impl<'a> std::convert::TryFrom<&'a [u8]> for ID {
-    type Error = AiffError;
-
-    fn try_from(value: &'a [u8]) -> Result<Self> {
-        assert_eq!(value.len(), 4);
-
-        let mut has_spaces = false;
-        for i in 0..4 {
-            match value[i] {
-                b' ' => {
-                    has_spaces = true;
-                }
-                0x21 ..= 0x7e => {
-                    if has_spaces {
-                        return Err(AiffError::InvalidFormat);
-                    }
-                }
-
-                _ => return Err(AiffError::InvalidFormat),
-            }
-        }
-
-        Ok(Self(value.try_into().unwrap()))
-    }
-}
-
-impl fmt::Debug for ID {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "ID(")?;
-        fmt::Display::fmt(&self, f)?;
-        write!(f, ")")
-    }
-}
-
-impl fmt::Display for ID {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}{}",
-            self.0[0] as char,
-            self.0[1] as char,
-            self.0[2] as char,
-            self.0[3] as char,
-        )
-    }
-}
-
-fn read_chunk<'a>(data: &mut &'a [u8]) -> Result<(ID, &'a [u8])> {
-    if data.len() < 8 {
-        return Err(AiffError::InvalidFormat);
-    }
-    let id = &data[0..4];
-    let size = BE::read_u32(&data[4..8]);
-
-    if data.len() < 8 + size as usize {
-        return Err(AiffError::InvalidFormat);
-    }
-    let chunk_data = &data[8..][..size as usize];
-
-    *data = &data[8..][size as usize..];
-    if size%2 == 1 {
-        *data = &data[1..];
-    }
-
-    Ok((id.try_into().unwrap(), chunk_data))
-}
-
-fn read_f80(data: &[u8]) -> f64 {
-    assert!(data.len() >= 10);
-    let exponent = BE::read_u16(&data[0..2]);
-    let mantissa = BE::read_u64(&data[2..10]);
-
-    let sign = (exponent >> 15) != 0;
-    let exponent = exponent & 0b0111_1111_1111_1111;
-
-    if exponent == 0 {
-        if (mantissa >> 63) == 0 {
-            if mantissa == 0 {
-                if !sign {
-                    0.0
-                } else {
-                    -0.0
-                }
-            } else {
-                unimplemented!("denormal f80")
-            }
-        } else {
-            unimplemented!("pseudo-denormal f80")
-        }
-    } else if exponent == (1 << 15) - 1 {
-        unimplemented!("infinity/nan f80")
-    } else {
-        if (mantissa >> 63) == 0 {
-            unimplemented!("unnormal f80")
-        } else {
-            let exponent = exponent as i32 - 16383;
-            if exponent < -1022 || exponent > 1023 {
-                unimplemented!("f80 exponent is too large");
-            }
-
-            // construct the f64
-            let exponent = exponent + 1023;
-            let mantissa = mantissa >> (64-52);
-            f64::from_bits(
-                mantissa as u64 |
-                ((exponent as u64) << 52) |
-                if sign {
-                    1 << 63
-                } else {
-                    0
-                }
-            )
-        }
-    }
-}
 
 #[derive(Debug)]
 pub struct Aiff<'a> {
@@ -199,43 +69,6 @@ impl<'a> Aiff<'a> {
             sample_size: self.comm.sample_size,
         }
     }*/
-}
-
-#[derive(Debug)]
-pub struct CommonChunk {
-    pub num_channels: u16,
-    pub num_sample_frames: u32,
-    pub sample_size: u16,
-    pub sample_rate: f64,
-}
-
-impl CommonChunk {
-    fn read(data: &[u8]) -> Result<Self> {
-        if data.len() != 18 {
-            return Err(AiffError::InvalidFormat);
-        }
-
-        let num_channels = BE::read_u16(&data[0..2]);
-        let num_sample_frames = BE::read_u32(&data[2..6]);
-        let sample_size = BE::read_u16(&data[6..8]);
-        let sample_rate = read_f80(&data[8..18]);
-
-        Ok(CommonChunk {
-            num_channels,
-            num_sample_frames,
-            sample_size,
-            sample_rate,
-        })
-    }
-
-    pub fn audio_length(&self) -> Duration {
-        Duration::from_secs_f64(self.num_sample_frames as f64 / self.sample_rate)
-    }
-}
-
-#[derive(Debug)]
-pub struct SoundDataChunk<'a> {
-    data: &'a [u8],
 }
 
 #[derive(Debug)]
