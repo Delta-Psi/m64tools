@@ -9,3 +9,4 @@ edition = "2018"
 
 [dependencies]
 m64 = { path = "m64" }
+cpal = "0.13.1"

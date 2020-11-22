@@ -479,6 +479,8 @@ pub struct SequenceLayer {
     //seq_channel
     script_state: ScriptState,
     //listItem
+
+    pub pitch: Option<u8>,
 }
 
 impl SequenceLayer {
@@ -504,6 +506,7 @@ impl SequenceLayer {
             pan: 0.0,
 
             play_percentage: None,
+            pitch: None,
         }
     }
 
@@ -518,6 +521,8 @@ impl SequenceLayer {
             if !self.stop_something && self.delay <= self.duration {
                 // seq_channel_layer_note_decay
                 self.stop_something = true;
+
+                self.pitch = None;
             }
             return;
         }
@@ -552,7 +557,7 @@ impl SequenceLayer {
                     break;
                 },
 
-                Note0 { percentage, duration, velocity, .. } => {
+                Note0 { percentage, duration, velocity, pitch } => {
                     // TODO
                     self.stop_something = false;
                     self.note_duration = duration;
@@ -562,23 +567,28 @@ impl SequenceLayer {
                     self.duration = self.note_duration as i16 * percentage as i16 / 256;
 
                     // TODO: etc
+                    self.pitch = Some(pitch);
                     break;
                 },
-                Note1 { percentage, velocity, .. } => {
+                Note1 { percentage, velocity, pitch } => {
                     self.note_duration = 0;
                     self.play_percentage = Some(percentage as i16);
                     self.velocity_square = (velocity as f32).powi(2);
                     self.delay = percentage as i16;
                     self.duration = self.note_duration as i16 * percentage as i16 / 256;
+
+                    self.pitch = Some(pitch);
                     break;
                 },
-                Note2 {  duration, velocity, .. } => {
+                Note2 {  duration, velocity, pitch } => {
                     self.stop_something = false;
                     self.note_duration = duration;
                     self.velocity_square = (velocity as f32).powi(2);
                     let percentage = self.play_percentage.unwrap();
                     self.delay = percentage as i16;
                     self.duration = self.note_duration as i16 * percentage as i16 / 256;
+
+                    self.pitch = Some(pitch);
                     break;
                 },
 
