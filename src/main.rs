@@ -64,7 +64,7 @@ fn main() {
                 for (i, channel) in player.channels.iter().enumerate().filter_map(|(i, c)| c.as_ref().map(|c| (i, c))) {
                     for (j, layer) in channel.layers.iter().enumerate().filter_map(|(j, l)| l.as_ref().map(|l| (j, l))) {
                         if let Some(pitch) = layer.pitch {
-                            let freq = frequency(pitch);
+                            let freq = frequency((player.transposition + channel.transposition + layer.transposition + pitch as i16) as u8);
 
                             let layer_state = audio_state.layers.entry((i as u8, j as u8)).or_insert(Default::default());
                             layer_state.phase += delta * freq;

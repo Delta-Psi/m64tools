@@ -400,6 +400,10 @@ impl SequenceChannel {
 
                     // ...
 
+                    Transpose(trans) => {
+                        self.transposition = trans as i16;
+                    }
+
                     LargeNotesOn => {
                         self.large_notes = true;
                     }
@@ -461,23 +465,23 @@ pub struct SequenceLayer {
     //portamento
     //adsr
     //portamento_time: u16,
-    transposition: i16,
+    pub transposition: i16,
     //freq_scale: f32,
-    velocity_square: f32,
-    pan: f32,
+    pub velocity_square: f32,
+    pub pan: f32,
     //note_velocity: f32,
     //note_pan: f32,
     //note_freq_scale: f32,
     //short_note_default_play_percentage: i16,
-    play_percentage: Option<i16>,
-    delay: i16,
-    duration: i16,
-    delay_unused: i16,
+    pub play_percentage: Option<i16>,
+    pub delay: i16,
+    pub duration: i16,
+    pub delay_unused: i16,
     //note
     //instrument
     //sound
     //seq_channel
-    script_state: ScriptState,
+    pub script_state: ScriptState,
     //listItem
 
     pub pitch: Option<u8>,
@@ -563,6 +567,10 @@ impl SequenceLayer {
                     state.pc = addr;
                 },
 
+                Transpose(trans) => {
+                    self.transposition = trans as i16;
+                }
+
                 Note0 { percentage, duration, velocity, pitch } => {
                     // TODO
                     self.stop_something = false;
@@ -600,7 +608,7 @@ impl SequenceLayer {
 
                 // ...
 
-                _ => unimplemented!("channel cmd {:x?}", cmd),
+                _ => unimplemented!("layer cmd {:x?}", cmd),
             }
         }
     }
