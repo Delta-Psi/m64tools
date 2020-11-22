@@ -1,12 +1,9 @@
-[workspace]
-members = ["m64", "aiff"]
-
 [package]
-name = "ultratracker"
+name = "aiff"
 version = "0.1.0"
 authors = ["Delta-Psi <delta.psi00@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-m64 = { path = "m64" }
-cpal = "0.13.1"
+thiserror = "1.0"
+byteorder = "1.3.4"
