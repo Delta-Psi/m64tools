@@ -45,7 +45,6 @@ fn main() {
     let stream = {
         let player = player.clone();
         let mut audio_state = AudioState::default();
-        let mut last_callback_time = Instant::now();
 
         device.build_output_stream(
             &cpal::StreamConfig {
@@ -54,8 +53,6 @@ fn main() {
                 buffer_size: cpal::BufferSize::Default,
             },
             move |data: &mut [f32], _| {
-                let current_callback_time = Instant::now();
-                let delta = (current_callback_time - last_callback_time).as_secs_f32();
                 for sample in data.iter_mut() {
                     *sample = 0.0;
                 }
@@ -67,16 +64,13 @@ fn main() {
                             let freq = frequency((player.transposition + channel.transposition + layer.transposition + pitch as i16) as u8);
 
                             let layer_state = audio_state.layers.entry((i as u8, j as u8)).or_insert(Default::default());
-                            layer_state.phase += delta * freq;
-                            let mut phase = layer_state.phase;
                             for sample in data.iter_mut() {
-                                *sample += 0.1 * (phase.rem_euclid(1.0).round()*2.0 - 1.0);
-                                phase += freq / SAMPLE_RATE as f32;
+                                *sample += 0.1 * (layer_state.phase * std::f32::consts::TAU).sin();
+                                layer_state.phase += freq / SAMPLE_RATE as f32;
                             }
                         }
                     }
                 }
-                last_callback_time = current_callback_time;
             },
             move |_err| {
             },
