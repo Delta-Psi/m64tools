@@ -5,5 +5,6 @@ fn main() {
     std::io::stdin().read_to_end(&mut data).unwrap();
 
     let aiff = aiff::Aiff::read(&data).unwrap();
-    println!("{:#x?}", aiff.comm);
+    println!("{:#?}", aiff.comm);
+    println!("audio length: {:?}", aiff.comm.audio_length());
 }

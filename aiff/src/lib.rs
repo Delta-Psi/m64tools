@@ -4,6 +4,7 @@ use byteorder::{BE, ByteOrder};
 use std::collections::HashMap;
 use std::convert::TryInto;
 use std::fmt;
+use std::time::Duration;
 
 use thiserror::Error;
 #[derive(Error, Debug)]
@@ -96,8 +97,6 @@ fn read_f80(data: &[u8]) -> f64 {
     assert!(data.len() >= 10);
     let exponent = BE::read_u16(&data[0..2]);
     let mantissa = BE::read_u64(&data[2..10]);
-    
-    println!("{:x?}", data);
 
     let sign = (exponent >> 15) != 0;
     let exponent = exponent & 0b0111_1111_1111_1111;
@@ -126,9 +125,6 @@ fn read_f80(data: &[u8]) -> f64 {
             if exponent < -1022 || exponent > 1023 {
                 unimplemented!("f80 exponent is too large");
             }
-
-            println!("{}", exponent);
-            println!("{:b}", mantissa);
 
             // construct the f64
             let exponent = exponent + 1023;
@@ -230,6 +226,10 @@ impl CommonChunk {
             sample_size,
             sample_rate,
         })
+    }
+
+    pub fn audio_length(&self) -> Duration {
+        Duration::from_secs_f64(self.num_sample_frames as f64 / self.sample_rate)
     }
 }
 
