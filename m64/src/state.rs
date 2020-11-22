@@ -225,9 +225,9 @@ impl SequencePlayer {
         for i in 0 .. self.channels.len() {
             if self.channels[i].is_some() {
                 // workaround so we can borrow self and the channel at the same time
-                let mut channel = std::mem::replace(&mut self.channels[i], None);
+                let mut channel = std::mem::take(&mut self.channels[i]);
                 channel.as_mut().unwrap().process(&self, data);
-                drop(std::mem::replace(&mut self.channels[i], channel));
+                self.channels[i] = channel;
             }
         }
     }
@@ -351,10 +351,8 @@ impl SequenceChannel {
         }
 
         if self.stop_script {
-            for layer_slot in &mut self.layers {
-                if let Some(layer) = layer_slot {
-                    layer.process(data);
-                }
+            for j in 0 .. self.layers.len() {
+                self.process_layer(j, data);
             }
             return;
         }
@@ -372,7 +370,7 @@ impl SequenceChannel {
                 use crate::channel::ChannelCmd::{self, *};
                 let (cmd, size) = ChannelCmd::read(&data[self.script_state.pc as usize..]);
                 self.script_state.pc += size as u16;
-                println!("{:x?}", cmd);
+                println!("channel: {:x?}", cmd);
 
                 let state = &mut self.script_state;
                 match cmd {
@@ -391,6 +389,7 @@ impl SequenceChannel {
                     },
                     Delay(delay) => {
                         self.delay = delay;
+                        break;
                     },
 
                     // ...
@@ -430,15 +429,16 @@ impl SequenceChannel {
         }
 
         for j in 0 .. self.layers.len() {
-            if self.layers[j].is_some() {
-                /*
-                // workaround so we can borrow self and the channel at the same time
-                let mut channel = std::mem::replace(&mut self.channels[i], None);
-                channel.as_mut().unwrap().process(&self, data);
-                drop(std::mem::replace(&mut self.channels[i], channel));
-                */
-                self.layers[j].as_mut().unwrap().process(data);
-            }
+            self.process_layer(j, data);
+        }
+    }
+
+    fn process_layer(&mut self, j: usize, data: &[u8]) {
+        if self.layers[j].is_some() {
+            // same as above
+            let mut layer = std::mem::take(&mut self.layers[j]);
+            layer.as_mut().unwrap().process(&self, data);
+            self.layers[j] = layer;
         }
     }
 }
@@ -463,7 +463,7 @@ pub struct SequenceLayer {
     //note_pan: f32,
     //note_freq_scale: f32,
     //short_note_default_play_percentage: i16,
-    //play_percentage: i16,
+    play_percentage: Option<i16>,
     delay: i16,
     duration: i16,
     delay_unused: i16,
@@ -496,9 +496,90 @@ impl SequenceLayer {
             //instrument: NOne
             velocity_square: 0.0,
             pan: 0.0,
+
+            play_percentage: None,
         }
     }
 
-    pub fn process(&mut self, _data: &[u8]) {
+    // from seq_channel_layer_process_script
+    pub fn process(&mut self, channel: &SequenceChannel, data: &[u8]) {
+        if !self.enabled {
+            return;
+        }
+
+        if self.delay > 1 {
+            self.delay -= 1;
+            if !self.stop_something && self.delay <= self.duration {
+                // seq_channel_layer_note_decay
+                self.stop_something = true;
+            }
+            return;
+        }
+
+        if !self.continuous_notes {
+            // seq_channel_layer_note_decay
+        }
+
+        // TODO: check portamento
+        loop {
+            use crate::layer::LayerCmd::{self, *};
+            let (cmd, size) = LayerCmd::read(&data[self.script_state.pc as usize..], channel.large_notes);
+            self.script_state.pc += size as u16;
+            println!("layer: {:x?}", cmd);
+
+            let state = &mut self.script_state;
+            match cmd {
+                End => {
+                    if state.depth == 0 {
+                        self.enabled = false;
+                        return;
+                    }
+                    state.depth -= 1;
+                    state.pc = state.stack[state.depth];
+                },
+
+                // ...
+
+                Delay(delay) => {
+                    self.delay = delay as i16;
+                    self.stop_something = true;
+                    break;
+                },
+
+                Note0 { pitch, percentage, velocity, duration } => {
+                    // TODO
+                    self.stop_something = false;
+                    self.note_duration = duration;
+                    self.play_percentage = Some(percentage as i16);
+                    self.velocity_square = (velocity as f32).powi(2);
+                    self.delay = percentage as i16;
+                    self.duration = self.note_duration as i16 * percentage as i16 / 256;
+
+                    // TODO: etc
+                    break;
+                },
+                Note1 { pitch, percentage, velocity } => {
+                    self.note_duration = 0;
+                    self.play_percentage = Some(percentage as i16);
+                    self.velocity_square = (velocity as f32).powi(2);
+                    self.delay = percentage as i16;
+                    self.duration = self.note_duration as i16 * percentage as i16 / 256;
+                    break;
+                },
+                Note2 { pitch, velocity, duration } => {
+                    self.stop_something = false;
+                    self.note_duration = duration;
+                    self.velocity_square = (velocity as f32).powi(2);
+                    let percentage = self.play_percentage.unwrap();
+                    self.delay = percentage as i16;
+                    self.duration = self.note_duration as i16 * percentage as i16 / 256;
+                    break;
+                },
+
+                // ...
+
+                _ => unimplemented!("channel cmd {:x?}", cmd),
+            }
+        }
     }
 }
