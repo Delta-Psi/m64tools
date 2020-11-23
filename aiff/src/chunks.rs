@@ -1,8 +1,4 @@
-mod comm;
-pub use comm::CommonChunk;
-
-mod ssnd;
-pub use ssnd::SoundDataChunk;
-
-mod mark;
-pub use mark::{Marker, MarkerChunk};
+pub mod comm;
+pub mod ssnd;
+pub mod mark;
+pub mod inst;

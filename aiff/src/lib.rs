@@ -17,7 +17,7 @@ use byteorder::{BE, ByteOrder};
 #[derive(Debug, Default)]
 pub struct AiffReader {
     pub read_mark: bool,
-    //pub read_inst: bool,
+    pub read_inst: bool,
     //pub read_midi: bool,
     //pub read_aesd: bool,
     //pub read_appl: bool,
@@ -29,7 +29,7 @@ impl AiffReader {
     pub fn all() -> Self {
         Self {
             read_mark: true,
-            //read_instr: true,
+            read_inst: true,
             //read_midi: true,
             //read_aesd: true,
             //read_appl: true,
@@ -45,14 +45,14 @@ impl AiffReader {
 
 #[derive(Debug)]
 pub struct Aiff<'a> {
-    pub comm: CommonChunk,
-    pub ssnd: SoundDataChunk<'a>,
-    pub mark: Option<MarkerChunk>,
-    //pub inst: Option<InstrumentChunk>,
-    //pub midi: Option<MidiDataChunk>,
-    //pub aesd: Option<AudioRecordingChunk>,
-    //pub appl: Option<ApplicationSpecificChunk>,
-    //pub comt: Option<CommentsChunk>,
+    pub comm: comm::CommonChunk,
+    pub ssnd: ssnd::SoundDataChunk<'a>,
+    pub mark: Option<mark::MarkerChunk>,
+    pub inst: Option<inst::InstrumentChunk>,
+    //pub midi: Option<midi::MidiDataChunk>,
+    //pub aesd: Option<aesd::AudioRecordingChunk>,
+    //pub appl: Option<appl::ApplicationSpecificChunk>,
+    //pub comt: Option<comt::CommentsChunk>,
     pub other_chunks: HashMap<ID, &'a [u8]>,
 }
 
@@ -67,12 +67,13 @@ impl<'a> Aiff<'a> {
         let data = form_data;
         let form_type: ID = data[0..4].try_into()?;
         if form_type.data() != b"AIFF" {
-            return Err(AiffError::InvalidFormType);
+            return Err(AiffError::InvalidFormType(form_type));
         }
 
         let mut comm = None;
         let mut ssnd = None;
         let mut mark = None;
+        let mut inst = None;
         let mut other_chunks = HashMap::new();
 
         let mut data = &data[4..];
@@ -81,14 +82,17 @@ impl<'a> Aiff<'a> {
 
             match chunk_id.data() {
                 b"COMM" => {
-                    comm = Some(CommonChunk::read(chunk_data)?);
+                    comm = Some(comm::CommonChunk::read(chunk_data)?);
                 }
                 b"SSND" => {
-                    ssnd = Some(SoundDataChunk::read(chunk_data)?);
+                    ssnd = Some(ssnd::SoundDataChunk::read(chunk_data)?);
                 }
 
                 b"MARK" => if config.read_mark {
-                    mark = Some(MarkerChunk::read(chunk_data)?);
+                    mark = Some(mark::MarkerChunk::read(chunk_data)?);
+                }
+                b"INST" => if config.read_inst {
+                    inst = Some(inst::InstrumentChunk::read(chunk_data)?);
                 }
 
                 _ => if config.read_other {
@@ -101,6 +105,7 @@ impl<'a> Aiff<'a> {
             comm: comm.ok_or(AiffError::MissingComm)?,
             ssnd: ssnd.ok_or(AiffError::MissingSsnd)?,
             mark,
+            inst,
             other_chunks,
         })
     }
