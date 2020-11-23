@@ -43,5 +43,16 @@ fn main() {
     let sequences_path = decomp_sound_path.join("sequences.json");
     let sequences_json = std::fs::read_to_string(sequences_path).unwrap();
     let sequences = Sequence::read_sequences_json(&sequences_json);
-    println!("{:#?}", sequences);
+
+    let mut siv = cursive::default();
+
+    use cursive::views::SelectView;
+    let mut sequence_list = SelectView::new();
+    for seq in &sequences {
+        sequence_list.add_item(&seq.name, ());
+    }
+    siv.add_layer(sequence_list);
+
+    siv.add_global_callback('q', |s| s.quit());
+    siv.run();
 }
