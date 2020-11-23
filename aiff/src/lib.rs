@@ -25,6 +25,18 @@ pub struct AiffReader {
 }
 
 impl AiffReader {
+    pub fn all() -> Self {
+        Self {
+            //read_mark: true,
+            //read_instr: true,
+            //read_midi: true,
+            //read_aesd: true,
+            //read_appl: true,
+            //read_comt: true,
+            read_other: true,
+        }
+    }
+
     pub fn read<'a>(&self, data: &'a [u8]) -> Result<Aiff<'a>> {
         Aiff::read(data, &self)
     }

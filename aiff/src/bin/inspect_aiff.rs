@@ -4,7 +4,13 @@ fn main() {
     let mut data = Vec::new();
     std::io::stdin().read_to_end(&mut data).unwrap();
 
-    let aiff = aiff::Aiff::read(&data).unwrap();
+    let aiff = aiff::AiffReader::all().read(&data).unwrap();
     println!("{:#?}", aiff.comm);
     println!("audio length: {:?}", aiff.comm.audio_length());
+
+    print!("other chunks:");
+    for id in aiff.other_chunks.keys() {
+        print!(" {}", id);
+    }
+    println!();
 }
