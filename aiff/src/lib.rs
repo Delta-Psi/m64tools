@@ -175,6 +175,6 @@ impl<'a> Iterator for Samples<'a> {
 impl<'a> Samples<'a> {
     pub fn normalize_to_f32(self) -> impl Iterator<Item = f32> + 'a {
         let sample_size = self.sample_size;
-        self.map(move |s| s as f32 / (1 << sample_size - 1) as f32)
+        self.map(move |s| s as f32 / ((1 << sample_size) - 1) as f32)
     }
 }

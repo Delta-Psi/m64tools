@@ -77,6 +77,12 @@ pub struct SequencePlayer {
     // loading_bank
 }
 
+impl Default for SequencePlayer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SequencePlayer {
     pub fn new() -> Self {
         Self {
@@ -315,7 +321,7 @@ pub struct SequenceChannel {
 }
 
 impl SequenceChannel {
-    pub fn new() -> Self {
+    fn new() -> Self {
         Self {
             enabled: false,
             finished: false,
@@ -486,7 +492,7 @@ pub struct SequenceLayer {
 }
 
 impl SequenceLayer {
-    pub fn new(addr: u16, _channel: &SequenceChannel) -> Self {
+    fn new(addr: u16, _channel: &SequenceChannel) -> Self {
         Self {
             //adsr: channel.adsr,
             //adsr.release_rate: 0

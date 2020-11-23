@@ -291,10 +291,6 @@ impl ChannelCmd {
     }
 
     pub fn is_end(&self) -> bool {
-        if let ChannelCmd::End = self {
-            true
-        } else {
-            false
-        }
+        matches!(self, ChannelCmd::End)
     }
 }

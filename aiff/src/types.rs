@@ -19,8 +19,8 @@ impl<'a> std::convert::TryFrom<&'a [u8]> for ID {
         assert_eq!(value.len(), 4);
 
         let mut has_spaces = false;
-        for i in 0..4 {
-            match value[i] {
+        for b in value.iter() {
+            match b {
                 b' ' => {
                     has_spaces = true;
                 }
@@ -100,22 +100,20 @@ pub fn read_f80(data: &[u8]) -> f64 {
         }
     } else if exponent == (1 << 15) - 1 {
         unimplemented!("infinity/nan f80")
+    } else if (mantissa >> 63) == 0 {
+        unimplemented!("unnormal f80")
     } else {
-        if (mantissa >> 63) == 0 {
-            unimplemented!("unnormal f80")
-        } else {
-            let exponent = exponent as i32 - 16383;
-            if exponent < -1022 || exponent > 1023 {
-                unimplemented!("f80 exponent is too large");
-            }
-
-            // construct the f64
-            let exponent = exponent + 1023;
-            let mantissa = mantissa >> (64 - 52);
-            f64::from_bits(
-                mantissa as u64 | ((exponent as u64) << 52) | if sign { 1 << 63 } else { 0 },
-            )
+        let exponent = exponent as i32 - 16383;
+        if exponent < -1022 || exponent > 1023 {
+            unimplemented!("f80 exponent is too large");
         }
+
+        // construct the f64
+        let exponent = exponent + 1023;
+        let mantissa = mantissa >> (64 - 52);
+        f64::from_bits(
+            mantissa as u64 | ((exponent as u64) << 52) | if sign { 1 << 63 } else { 0 },
+        )
     }
 }
 

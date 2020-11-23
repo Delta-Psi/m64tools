@@ -166,7 +166,7 @@ impl LayerCmd {
                             let (var, size) = read_var(&data[1..3]);
                             (
                                 Note0 {
-                                    pitch: data[0] - 0x00,
+                                    pitch: data[0],
                                     percentage: var,
                                     velocity: data[1 + size],
                                     duration: data[1 + size + 1],
@@ -202,7 +202,7 @@ impl LayerCmd {
                             let (var, size) = read_var(&data[1..3]);
                             (
                                 SmallNote0 {
-                                    pitch: data[0] - 0x00,
+                                    pitch: data[0],
                                     percentage: var,
                                 },
                                 1 + size,
@@ -229,10 +229,6 @@ impl LayerCmd {
     }
 
     pub fn is_end(&self) -> bool {
-        if let LayerCmd::End = self {
-            true
-        } else {
-            false
-        }
+        matches!(self, LayerCmd::End)
     }
 }

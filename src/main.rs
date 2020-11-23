@@ -7,6 +7,7 @@ use std::time::{Duration, Instant};
 
 const TICKS_PER_SECOND: f32 = 240.0;
 
+#[allow(clippy::approx_constant)]
 const FREQUENCIES: [f32; 128] = [
     0.105112, 0.111362, 0.117984, 0.125, 0.132433, 0.140308, 0.148651, 0.15749, 0.166855, 0.176777,
     0.187288, 0.198425, 0.210224, 0.222725, 0.235969, 0.25, 0.264866, 0.280616, 0.297302, 0.31498,
@@ -85,7 +86,7 @@ fn main() {
                                 let layer_state = audio_state
                                     .layers
                                     .entry((i as u8, j as u8))
-                                    .or_insert(Default::default());
+                                    .or_insert_with(Default::default);
                                 for sample in data.iter_mut() {
                                     *sample +=
                                         0.1 * (layer_state.phase * std::f32::consts::TAU).sin();

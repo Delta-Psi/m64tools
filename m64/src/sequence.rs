@@ -169,10 +169,6 @@ impl SequenceCmd {
     }
 
     pub fn is_end(&self) -> bool {
-        if let SequenceCmd::End = self {
-            true
-        } else {
-            false
-        }
+        matches!(self, SequenceCmd::End)
     }
 }
