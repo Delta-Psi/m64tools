@@ -164,7 +164,7 @@ impl SequenceCmd {
             0x50..=0x5f => (SubVariation, 1),
             0x00..=0x0f => (TestChDisabled(data[0] & 0x0f), 1),
 
-            _ => unimplemented!("sequence command 0x{:02x}", data[0]),
+            _ => todo!("sequence command 0x{:02x}", data[0]),
         }
     }
 

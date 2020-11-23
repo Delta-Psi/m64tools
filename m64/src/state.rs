@@ -229,7 +229,7 @@ impl SequencePlayer {
                     }
 
                     // ...
-                    _ => unimplemented!("player cmd {:x?}", cmd),
+                    _ => todo!("player cmd {:x?}", cmd),
                 }
             }
         }
@@ -438,7 +438,7 @@ impl SequenceChannel {
                         // big fat TODO
                     }
 
-                    _ => unimplemented!("channel cmd {:x?}", cmd),
+                    _ => todo!("channel cmd {:x?}", cmd),
                 }
             }
         }
@@ -624,7 +624,7 @@ impl SequenceLayer {
                 }
 
                 // ...
-                _ => unimplemented!("layer cmd {:x?}", cmd),
+                _ => todo!("layer cmd {:x?}", cmd),
             }
         }
     }

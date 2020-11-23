@@ -286,7 +286,7 @@ impl ChannelCmd {
             0x10..=0x1f => (StartChannel(data[0] & 0x0f, BE::read_u16(&data[1..3])), 3),
             0x00..=0x0f => (TestLayerFinished(data[0] & 0x0f), 1),
 
-            _ => unimplemented!("sequence command 0x{:02x}", data[0]),
+            _ => todo!("sequence command 0x{:02x}", data[0]),
         }
     }
 

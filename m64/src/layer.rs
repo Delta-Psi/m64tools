@@ -194,7 +194,7 @@ impl LayerCmd {
                             3,
                         ),
 
-                        _ => unimplemented!("layer command 0x{:02x}", data[0]),
+                        _ => todo!("layer command 0x{:02x}", data[0]),
                     }
                 } else {
                     match data[1] {
@@ -221,7 +221,7 @@ impl LayerCmd {
                             1,
                         ),
 
-                        _ => unimplemented!("layer command 0x{:02x}", data[0]),
+                        _ => todo!("layer command 0x{:02x}", data[0]),
                     }
                 }
             }
