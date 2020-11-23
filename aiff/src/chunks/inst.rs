@@ -1,5 +1,5 @@
 use crate::error::*;
-use byteorder::{BE, ByteOrder};
+use byteorder::{ByteOrder, BE};
 use std::convert::TryInto;
 
 #[derive(Debug)]

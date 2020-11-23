@@ -1,7 +1,7 @@
-use std::time::Duration;
-use byteorder::{BE, ByteOrder};
 use crate::error::*;
 use crate::types::*;
+use byteorder::{ByteOrder, BE};
+use std::time::Duration;
 
 #[derive(Debug)]
 pub struct CommonChunk {
@@ -34,4 +34,3 @@ impl CommonChunk {
         Duration::from_secs_f64(self.num_sample_frames as f64 / self.sample_rate)
     }
 }
-

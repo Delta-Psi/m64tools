@@ -1,5 +1,5 @@
 use crate::error::*;
-use byteorder::{BE, ByteOrder};
+use byteorder::{ByteOrder, BE};
 use std::convert::TryInto;
 use std::fmt;
 
@@ -24,7 +24,7 @@ impl<'a> std::convert::TryFrom<&'a [u8]> for ID {
                 b' ' => {
                     has_spaces = true;
                 }
-                0x21 ..= 0x7e => {
+                0x21..=0x7e => {
                     if has_spaces {
                         return Err(AiffError::InvalidFormat);
                     }
@@ -48,11 +48,10 @@ impl fmt::Debug for ID {
 
 impl fmt::Display for ID {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}{}",
-            self.0[0] as char,
-            self.0[1] as char,
-            self.0[2] as char,
-            self.0[3] as char,
+        write!(
+            f,
+            "{}{}{}{}",
+            self.0[0] as char, self.0[1] as char, self.0[2] as char, self.0[3] as char,
         )
     }
 }
@@ -70,7 +69,7 @@ pub fn read_chunk<'a>(data: &mut &'a [u8]) -> Result<(ID, &'a [u8])> {
     let chunk_data = &data[8..][..size as usize];
 
     *data = &data[8..][size as usize..];
-    if size%2 == 1 {
+    if size % 2 == 1 {
         *data = &data[1..];
     }
 
@@ -112,15 +111,9 @@ pub fn read_f80(data: &[u8]) -> f64 {
 
             // construct the f64
             let exponent = exponent + 1023;
-            let mantissa = mantissa >> (64-52);
+            let mantissa = mantissa >> (64 - 52);
             f64::from_bits(
-                mantissa as u64 |
-                ((exponent as u64) << 52) |
-                if sign {
-                    1 << 63
-                } else {
-                    0
-                }
+                mantissa as u64 | ((exponent as u64) << 52) | if sign { 1 << 63 } else { 0 },
             )
         }
     }
@@ -139,7 +132,7 @@ pub fn read_pstring(data: &mut &[u8]) -> Result<String> {
     let string_data = &data[..len];
     *data = &data[len..];
 
-    if len%2 == 0 {
+    if len % 2 == 0 {
         *data = &data[1..];
     }
     Ok(String::from_utf8_lossy(string_data).into_owned())

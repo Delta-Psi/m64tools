@@ -1,5 +1,5 @@
-use byteorder::{ByteOrder, BE};
 use super::read_var;
+use byteorder::{ByteOrder, BE};
 
 #[derive(Debug)]
 pub struct LinearEnvelope {
@@ -104,7 +104,7 @@ pub enum ChannelCmd {
     /// Seems like it was meant to set the number of updates per frame?
     /// But it doesn’t actually do anything.
     SetUpdatesPerFrame(u8),
-    
+
     /// Set amount of reverb (or “dry/wet mix”?).
     SetReverb(u8),
 
@@ -206,8 +206,8 @@ impl ChannelCmd {
             0xfe => (Delay1, 1),
             0xfd => {
                 let (var, size) = read_var(&data[1..3]);
-                (Delay(var), 1+size)
-            },
+                (Delay(var), 1 + size)
+            }
 
             0xfc => (Call(BE::read_u16(&data[1..3])), 3),
             0xfb => (Jump(BE::read_u16(&data[1..3])), 3),
@@ -270,22 +270,21 @@ impl ChannelCmd {
             0xc2 => (SetDynTable(BE::read_u16(&data[1..3])), 3),
             0xc1 => (SetInstr(data[1]), 2),
 
-            0xb0 ..= 0xbf => (DynSetLayer(data[0] & 0x0f), 1),
-            0xa0 ..= 0xaf => (FreeLayer(data[0] & 0x0f), 1),
-            0x90 ..= 0x9f => (SetLayer(data[0] & 0x0f, BE::read_u16(&data[1..3])), 3),
+            0xb0..=0xbf => (DynSetLayer(data[0] & 0x0f), 1),
+            0xa0..=0xaf => (FreeLayer(data[0] & 0x0f), 1),
+            0x90..=0x9f => (SetLayer(data[0] & 0x0f, BE::read_u16(&data[1..3])), 3),
 
-            0x80 ..= 0x8f => (IoReadVal(data[0] & 0x0f), 1),
-            0x70 ..= 0x7f => (IoWriteVal(data[0] & 0x0f), 1),
+            0x80..=0x8f => (IoReadVal(data[0] & 0x0f), 1),
+            0x70..=0x7f => (IoWriteVal(data[0] & 0x0f), 1),
 
-            0x60 ..= 0x6f => (SetNotePriority(data[0] & 0x0f), 1),
+            0x60..=0x6f => (SetNotePriority(data[0] & 0x0f), 1),
 
-            0x50 ..= 0x5f => (IoReadValSub(data[0] & 0x0f), 1),
-            0x40 ..= 0x4f => (IoReadVal2(data[0] & 0x0f, data[1]), 2),
-            0x30 ..= 0x3f => (IoWriteVal2(data[0] & 0x0f, data[1]), 2),
-            0x20 ..= 0x2f => (DisableChannel(data[0] & 0x0f), 1),
-            0x10 ..= 0x1f => (StartChannel(data[0] & 0x0f, BE::read_u16(&data[1..3])), 3),
-            0x00 ..= 0x0f => (TestLayerFinished(data[0] & 0x0f), 1),
-
+            0x50..=0x5f => (IoReadValSub(data[0] & 0x0f), 1),
+            0x40..=0x4f => (IoReadVal2(data[0] & 0x0f, data[1]), 2),
+            0x30..=0x3f => (IoWriteVal2(data[0] & 0x0f, data[1]), 2),
+            0x20..=0x2f => (DisableChannel(data[0] & 0x0f), 1),
+            0x10..=0x1f => (StartChannel(data[0] & 0x0f, BE::read_u16(&data[1..3])), 3),
+            0x00..=0x0f => (TestLayerFinished(data[0] & 0x0f), 1),
 
             _ => unimplemented!("sequence command 0x{:02x}", data[0]),
         }

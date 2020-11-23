@@ -1,5 +1,5 @@
 use crate::error::*;
-use byteorder::{BE, ByteOrder};
+use byteorder::{ByteOrder, BE};
 
 #[derive(Debug)]
 pub struct SoundDataChunk<'a> {
@@ -22,9 +22,7 @@ impl<'a> SoundDataChunk<'a> {
         }
 
         let data = &data[8..];
-        Ok(Self {
-            data,
-        })
+        Ok(Self { data })
     }
 
     pub fn raw_data(&self) -> &'a [u8] {

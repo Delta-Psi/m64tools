@@ -1,8 +1,8 @@
 //! Referenced from https://hackmd.io/opEB-OmxRa26P8h8pA-x7w.
 
-pub mod sequence;
 pub mod channel;
 pub mod layer;
+pub mod sequence;
 
 pub mod state;
 

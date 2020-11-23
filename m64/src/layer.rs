@@ -1,5 +1,5 @@
-use byteorder::{ByteOrder, BE};
 use super::read_var;
+use byteorder::{ByteOrder, BE};
 
 #[derive(Debug)]
 pub enum LayerCmd {
@@ -93,24 +93,17 @@ pub enum LayerCmd {
     /// setshortnote{velocity,duration} (or the fromtable variants),
     /// defaulting to 0 and 0x80 respectively if not set. Only valid
     /// if channel is set to “small notes”.
-    SmallNote0 {
-        pitch: u8,
-        percentage: u16,
-    },
+    SmallNote0 { pitch: u8, percentage: u16 },
     /// Play note with pitch N and the default play percentage, as
     /// set by setshortnotedefaultplaypercentage (there is no built-in
     /// default; using it without that command will read uninitialized
     /// memory). Velocity and duration is set like in smallnote0.  Only
     /// valid if channel is set to “small notes”.
-    SmallNote1 {
-        pitch: u8,
-    },
+    SmallNote1 { pitch: u8 },
     /// Play note with pitch N and the previous play percentage. Velocity
     /// and duration is set like in smallnote0. Only valid if channel
     /// is set to “small notes”.
-    SmallNote2 {
-        pitch: u8,
-    },
+    SmallNote2 { pitch: u8 },
 }
 
 impl LayerCmd {
@@ -126,8 +119,8 @@ impl LayerCmd {
             0xf8 => (Loop(data[1]), 2),
             0xf7 => (LoopEnd, 1),
 
-            0xe0 ..= 0xef => (SetShortNoteDurationFromTable(data[0] & 0x0f), 1),
-            0xd0 ..= 0xdf => (SetShortNoteVelocityFromTable(data[0] & 0x0f), 1),
+            0xe0..=0xef => (SetShortNoteDurationFromTable(data[0] & 0x0f), 1),
+            0xd0..=0xdf => (SetShortNoteVelocityFromTable(data[0] & 0x0f), 1),
 
             0xca => (SetPan(data[1]), 2),
             0xc9 => (SetShortNoteDuration(data[1]), 2),
@@ -144,8 +137,8 @@ impl LayerCmd {
                     (z as u16, 1)
                 };
 
-                (Portamento(x, y, z), 3+z_size)
-            },
+                (Portamento(x, y, z), 3 + z_size)
+            }
 
             0xc6 => (SetInstr(data[1]), 2),
 
@@ -154,8 +147,8 @@ impl LayerCmd {
 
             0xc3 => {
                 let (var, size) = read_var(&data[1..3]);
-                (SetShortNoteDefaultPlayPercentage(var), 1+size)
-            },
+                (SetShortNoteDefaultPlayPercentage(var), 1 + size)
+            }
 
             0xc2 => (Transpose(data[1]), 2),
 
@@ -163,62 +156,75 @@ impl LayerCmd {
 
             0xc0 => {
                 let (var, size) = read_var(&data[1..3]);
-                (Delay(var), 1+size)
-            },
-            
-            _ => if large_notes {
-                match data[0] {
-                    0x00 ..= 0x3f => {
-                        let (var, size) = read_var(&data[1..3]);
-                        (Note0 {
-                            pitch: data[0] - 0x00,
-                            percentage: var,
-                            velocity: data[1+size],
-                            duration: data[1+size+1],
-                        }, 1+size+2)
-                    }
-                    0x40 ..= 0x7f => {
-                        let (var, size) = read_var(&data[1..3]);
-                        (Note1 {
-                            pitch: data[0] - 0x40,
-                            percentage: var,
-                            velocity: data[1+size],
-                        }, 1+size+1)
-                    }
-                    0x80 ..= 0xbf => {
-                        (Note2 {
-                            pitch: data[0] - 0x80,
-                            velocity: data[1],
-                            duration: data[2],
-                        }, 3)
-                    }
-
-                    _ => unimplemented!("layer command 0x{:02x}", data[0]),
-                }
-            } else {
-                match data[1] {
-                    0x00 ..= 0x3f => {
-                        let (var, size) = read_var(&data[1..3]);
-                        (SmallNote0 {
-                            pitch: data[0] - 0x00,
-                            percentage: var,
-                        }, 1+size)
-                    }
-                    0x40 ..= 0x7f => {
-                        (SmallNote1 {
-                            pitch: data[0] - 0x40,
-                        }, 1)
-                    }
-                    0x80 ..= 0xbf => {
-                        (SmallNote2 {
-                            pitch: data[0] - 0x80,
-                        }, 1)
-                    }
-
-                    _ => unimplemented!("layer command 0x{:02x}", data[0]),
-                }
+                (Delay(var), 1 + size)
             }
 
+            _ => {
+                if large_notes {
+                    match data[0] {
+                        0x00..=0x3f => {
+                            let (var, size) = read_var(&data[1..3]);
+                            (
+                                Note0 {
+                                    pitch: data[0] - 0x00,
+                                    percentage: var,
+                                    velocity: data[1 + size],
+                                    duration: data[1 + size + 1],
+                                },
+                                1 + size + 2,
+                            )
+                        }
+                        0x40..=0x7f => {
+                            let (var, size) = read_var(&data[1..3]);
+                            (
+                                Note1 {
+                                    pitch: data[0] - 0x40,
+                                    percentage: var,
+                                    velocity: data[1 + size],
+                                },
+                                1 + size + 1,
+                            )
+                        }
+                        0x80..=0xbf => (
+                            Note2 {
+                                pitch: data[0] - 0x80,
+                                velocity: data[1],
+                                duration: data[2],
+                            },
+                            3,
+                        ),
+
+                        _ => unimplemented!("layer command 0x{:02x}", data[0]),
+                    }
+                } else {
+                    match data[1] {
+                        0x00..=0x3f => {
+                            let (var, size) = read_var(&data[1..3]);
+                            (
+                                SmallNote0 {
+                                    pitch: data[0] - 0x00,
+                                    percentage: var,
+                                },
+                                1 + size,
+                            )
+                        }
+                        0x40..=0x7f => (
+                            SmallNote1 {
+                                pitch: data[0] - 0x40,
+                            },
+                            1,
+                        ),
+                        0x80..=0xbf => (
+                            SmallNote2 {
+                                pitch: data[0] - 0x80,
+                            },
+                            1,
+                        ),
+
+                        _ => unimplemented!("layer command 0x{:02x}", data[0]),
+                    }
+                }
+            }
         }
     }
 

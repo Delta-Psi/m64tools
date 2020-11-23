@@ -1,5 +1,5 @@
-use thiserror::Error;
 use crate::types::ID;
+use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum AiffError {
@@ -12,7 +12,7 @@ pub enum AiffError {
     MissingComm,
     #[error("missing sound data chunk")]
     MissingSsnd,
-    
+
     #[error("invalid play mode {0}")]
     InvalidPlayMode(u16),
 }

@@ -10,9 +10,9 @@ use types::*;
 pub mod chunks;
 use chunks::*;
 
+use byteorder::{ByteOrder, BE};
 use std::collections::HashMap;
 use std::convert::TryInto;
-use byteorder::{BE, ByteOrder};
 
 #[derive(Debug, Default)]
 pub struct AiffReader {
@@ -88,15 +88,21 @@ impl<'a> Aiff<'a> {
                     ssnd = Some(ssnd::SoundDataChunk::read(chunk_data)?);
                 }
 
-                b"MARK" => if config.read_mark {
-                    mark = Some(mark::MarkerChunk::read(chunk_data)?);
+                b"MARK" => {
+                    if config.read_mark {
+                        mark = Some(mark::MarkerChunk::read(chunk_data)?);
+                    }
                 }
-                b"INST" => if config.read_inst {
-                    inst = Some(inst::InstrumentChunk::read(chunk_data)?);
+                b"INST" => {
+                    if config.read_inst {
+                        inst = Some(inst::InstrumentChunk::read(chunk_data)?);
+                    }
                 }
 
-                _ => if config.read_other {
-                    other_chunks.insert(chunk_id, chunk_data);
+                _ => {
+                    if config.read_other {
+                        other_chunks.insert(chunk_id, chunk_data);
+                    }
                 }
             }
         }

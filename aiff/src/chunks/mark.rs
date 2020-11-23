@@ -1,6 +1,6 @@
 use crate::error::*;
-use byteorder::{BE, ByteOrder};
 use crate::types::*;
+use byteorder::{ByteOrder, BE};
 
 #[derive(Debug)]
 pub struct Marker {
@@ -20,11 +20,7 @@ impl Marker {
         *data = &data[6..];
         let name = read_pstring(data)?;
 
-        Ok(Marker {
-            id,
-            position,
-            name,
-        })
+        Ok(Marker { id, position, name })
     }
 }
 
@@ -43,12 +39,10 @@ impl MarkerChunk {
 
         let mut markers = Vec::with_capacity(num_markers as usize);
         let mut data = &data[2..];
-        for _ in 0 .. num_markers {
+        for _ in 0..num_markers {
             markers.push(Marker::read(&mut data)?);
         }
 
-        Ok(Self {
-            markers,
-        })
+        Ok(Self { markers })
     }
 }

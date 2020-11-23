@@ -10,7 +10,8 @@ const TEMPO_SCALE: u16 = TATUMS_PER_BEAT;
 const FREQUENCY: u32 = 32000;
 const SAMPLES_PER_FRAME_TARGET: u32 = FREQUENCY / 60;
 const UPDATES_PER_FRAME: u32 = SAMPLES_PER_FRAME_TARGET / 160 + 1;
-const TEMPO_INTERNAL_TO_EXTERNAL: u32 = (UPDATES_PER_FRAME as f32 * 2_880_000.0 / TATUMS_PER_BEAT as f32 / 16.713) as u32;
+const TEMPO_INTERNAL_TO_EXTERNAL: u32 =
+    (UPDATES_PER_FRAME as f32 * 2_880_000.0 / TATUMS_PER_BEAT as f32 / 16.713) as u32;
 
 bitflags! {
     pub struct MuteBehavior: u8 {
@@ -154,10 +155,11 @@ impl SequencePlayer {
                     Loop(count) => {
                         state.rem_loop_iters[state.depth] = count;
                         state.depth += 1;
-                        state.stack[state.depth-1] = state.pc;
+                        state.stack[state.depth - 1] = state.pc;
                     }
                     LoopEnd => {
-                        state.rem_loop_iters[state.depth - 1] = state.rem_loop_iters[state.depth - 1].wrapping_sub(1);
+                        state.rem_loop_iters[state.depth - 1] =
+                            state.rem_loop_iters[state.depth - 1].wrapping_sub(1);
                         if state.rem_loop_iters[state.depth - 1] != 0 {
                             state.pc = state.stack[state.depth - 1];
                         } else {
@@ -199,7 +201,6 @@ impl SequencePlayer {
                     }
 
                     // ...
-
                     SetMuteBhv(bhv) => {
                         self.mute_behavior = MuteBehavior::from_bits_truncate(bhv);
                     }
@@ -222,13 +223,12 @@ impl SequencePlayer {
                     }
 
                     // ...
-
                     _ => unimplemented!("player cmd {:x?}", cmd),
                 }
             }
         }
 
-        for i in 0 .. self.channels.len() {
+        for i in 0..self.channels.len() {
             if self.channels[i].is_some() {
                 // workaround so we can borrow self and the channel at the same time
                 let mut channel = std::mem::take(&mut self.channels[i]);
@@ -357,7 +357,7 @@ impl SequenceChannel {
         }
 
         if self.stop_script {
-            for j in 0 .. self.layers.len() {
+            for j in 0..self.layers.len() {
                 self.process_layer(j, data);
             }
             return;
@@ -388,18 +388,17 @@ impl SequenceChannel {
                         }
                         state.depth -= 1;
                         state.pc = state.stack[state.depth];
-                    },
+                    }
 
                     Delay1 => {
                         break;
-                    },
+                    }
                     Delay(delay) => {
                         self.delay = delay;
                         break;
-                    },
+                    }
 
                     // ...
-
                     Transpose(trans) => {
                         self.transposition = trans as i16;
                     }
@@ -438,7 +437,7 @@ impl SequenceChannel {
             }
         }
 
-        for j in 0 .. self.layers.len() {
+        for j in 0..self.layers.len() {
             self.process_layer(j, data);
         }
     }
@@ -483,7 +482,6 @@ pub struct SequenceLayer {
     //seq_channel
     pub script_state: ScriptState,
     //listItem
-
     pub pitch: Option<u8>,
 }
 
@@ -538,7 +536,8 @@ impl SequenceLayer {
         // TODO: check portamento
         loop {
             use crate::layer::LayerCmd::{self, *};
-            let (cmd, size) = LayerCmd::read(&data[self.script_state.pc as usize..], channel.large_notes);
+            let (cmd, size) =
+                LayerCmd::read(&data[self.script_state.pc as usize..], channel.large_notes);
             self.script_state.pc += size as u16;
             println!("layer: {:x?}", cmd);
 
@@ -551,27 +550,31 @@ impl SequenceLayer {
                     }
                     state.depth -= 1;
                     state.pc = state.stack[state.depth];
-                },
+                }
 
                 // ...
-
                 Delay(delay) => {
                     self.delay = delay as i16;
                     self.stop_something = true;
                     break;
-                },
+                }
 
                 Call(addr) => {
                     state.stack[state.depth] = state.pc;
                     state.depth += 1;
                     state.pc = addr;
-                },
+                }
 
                 Transpose(trans) => {
                     self.transposition = trans as i16;
                 }
 
-                Note0 { percentage, duration, velocity, pitch } => {
+                Note0 {
+                    percentage,
+                    duration,
+                    velocity,
+                    pitch,
+                } => {
                     // TODO
                     self.stop_something = false;
                     self.note_duration = duration;
@@ -583,8 +586,12 @@ impl SequenceLayer {
                     // TODO: etc
                     self.pitch = Some(pitch);
                     break;
-                },
-                Note1 { percentage, velocity, pitch } => {
+                }
+                Note1 {
+                    percentage,
+                    velocity,
+                    pitch,
+                } => {
                     self.note_duration = 0;
                     self.play_percentage = Some(percentage as i16);
                     self.velocity_square = (velocity as f32).powi(2);
@@ -593,8 +600,12 @@ impl SequenceLayer {
 
                     self.pitch = Some(pitch);
                     break;
-                },
-                Note2 {  duration, velocity, pitch } => {
+                }
+                Note2 {
+                    duration,
+                    velocity,
+                    pitch,
+                } => {
                     self.stop_something = false;
                     self.note_duration = duration;
                     self.velocity_square = (velocity as f32).powi(2);
@@ -604,10 +615,9 @@ impl SequenceLayer {
 
                     self.pitch = Some(pitch);
                     break;
-                },
+                }
 
                 // ...
-
                 _ => unimplemented!("layer cmd {:x?}", cmd),
             }
         }

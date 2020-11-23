@@ -1,5 +1,5 @@
-use byteorder::{ByteOrder, BE};
 use super::read_var;
+use byteorder::{ByteOrder, BE};
 
 #[derive(Debug)]
 pub enum SequenceCmd {
@@ -117,8 +117,8 @@ impl SequenceCmd {
             0xfe => (Delay1, 1),
             0xfd => {
                 let (var, size) = read_var(&data[1..3]);
-                (Delay(var), 1+size)
-            },
+                (Delay(var), 1 + size)
+            }
 
             0xfc => (Call(BE::read_u16(&data[1..3])), 3),
             0xfb => (Jump(BE::read_u16(&data[1..3])), 3),
@@ -157,12 +157,12 @@ impl SequenceCmd {
             0xc9 => (BitAnd(data[1]), 2),
             0xc8 => (Subtract(data[1]), 2),
 
-            0x90 ..= 0x9f => (StartChannel(data[0] & 0x0f, BE::read_u16(&data[1..3])), 3),
+            0x90..=0x9f => (StartChannel(data[0] & 0x0f, BE::read_u16(&data[1..3])), 3),
 
-            0x80 ..= 0x8f => (GetVariation, 1),
-            0x70 ..= 0x7f => (SetVariation, 1),
-            0x50 ..= 0x5f => (SubVariation, 1),
-            0x00 ..= 0x0f => (TestChDisabled(data[0] & 0x0f), 1),
+            0x80..=0x8f => (GetVariation, 1),
+            0x70..=0x7f => (SetVariation, 1),
+            0x50..=0x5f => (SubVariation, 1),
+            0x00..=0x0f => (TestChDisabled(data[0] & 0x0f), 1),
 
             _ => unimplemented!("sequence command 0x{:02x}", data[0]),
         }
