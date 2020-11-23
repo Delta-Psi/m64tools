@@ -111,9 +111,7 @@ pub fn read_f80(data: &[u8]) -> f64 {
         // construct the f64
         let exponent = exponent + 1023;
         let mantissa = mantissa >> (64 - 52);
-        f64::from_bits(
-            mantissa as u64 | ((exponent as u64) << 52) | if sign { 1 << 63 } else { 0 },
-        )
+        f64::from_bits(mantissa as u64 | ((exponent as u64) << 52) | if sign { 1 << 63 } else { 0 })
     }
 }
 
