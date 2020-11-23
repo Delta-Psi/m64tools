@@ -8,6 +8,8 @@ fn main() {
     println!("{:#?}", aiff.comm);
     println!("audio length: {:?}", aiff.comm.audio_length());
 
+    println!("MARK: {:?}", aiff.mark);
+
     print!("other chunks:");
     for id in aiff.other_chunks.keys() {
         print!(" {}", id);

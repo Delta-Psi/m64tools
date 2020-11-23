@@ -3,7 +3,8 @@
 mod error;
 pub use error::{AiffError, Result};
 
-pub mod types;
+mod types;
+pub use types::ID;
 use types::*;
 
 pub mod chunks;
@@ -15,7 +16,7 @@ use byteorder::{BE, ByteOrder};
 
 #[derive(Debug, Default)]
 pub struct AiffReader {
-    //pub read_mark: bool,
+    pub read_mark: bool,
     //pub read_inst: bool,
     //pub read_midi: bool,
     //pub read_aesd: bool,
@@ -27,7 +28,7 @@ pub struct AiffReader {
 impl AiffReader {
     pub fn all() -> Self {
         Self {
-            //read_mark: true,
+            read_mark: true,
             //read_instr: true,
             //read_midi: true,
             //read_aesd: true,
@@ -46,7 +47,7 @@ impl AiffReader {
 pub struct Aiff<'a> {
     pub comm: CommonChunk,
     pub ssnd: SoundDataChunk<'a>,
-    //pub mark: Option<MarkerChunk>,
+    pub mark: Option<MarkerChunk>,
     //pub inst: Option<InstrumentChunk>,
     //pub midi: Option<MidiDataChunk>,
     //pub aesd: Option<AudioRecordingChunk>,
@@ -71,6 +72,7 @@ impl<'a> Aiff<'a> {
 
         let mut comm = None;
         let mut ssnd = None;
+        let mut mark = None;
         let mut other_chunks = HashMap::new();
 
         let mut data = &data[4..];
@@ -85,6 +87,10 @@ impl<'a> Aiff<'a> {
                     ssnd = Some(SoundDataChunk::read(chunk_data)?);
                 }
 
+                b"MARK" => if config.read_mark {
+                    mark = Some(MarkerChunk::read(chunk_data)?);
+                }
+
                 _ => if config.read_other {
                     other_chunks.insert(chunk_id, chunk_data);
                 }
@@ -94,6 +100,7 @@ impl<'a> Aiff<'a> {
         Ok(Self {
             comm: comm.ok_or(AiffError::MissingComm)?,
             ssnd: ssnd.ok_or(AiffError::MissingSsnd)?,
+            mark,
             other_chunks,
         })
     }

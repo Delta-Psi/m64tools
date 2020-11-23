@@ -57,7 +57,7 @@ impl fmt::Display for ID {
     }
 }
 
-pub(crate) fn read_chunk<'a>(data: &mut &'a [u8]) -> Result<(ID, &'a [u8])> {
+pub fn read_chunk<'a>(data: &mut &'a [u8]) -> Result<(ID, &'a [u8])> {
     if data.len() < 8 {
         return Err(AiffError::InvalidFormat);
     }
@@ -77,7 +77,7 @@ pub(crate) fn read_chunk<'a>(data: &mut &'a [u8]) -> Result<(ID, &'a [u8])> {
     Ok((id.try_into().unwrap(), chunk_data))
 }
 
-pub(crate) fn read_f80(data: &[u8]) -> f64 {
+pub fn read_f80(data: &[u8]) -> f64 {
     assert!(data.len() >= 10);
     let exponent = BE::read_u16(&data[0..2]);
     let mantissa = BE::read_u64(&data[2..10]);
@@ -126,3 +126,21 @@ pub(crate) fn read_f80(data: &[u8]) -> f64 {
     }
 }
 
+pub fn read_pstring(data: &mut &[u8]) -> Result<String> {
+    if data.is_empty() {
+        return Err(AiffError::InvalidFormat);
+    }
+    let len = data[0] as usize;
+    *data = &data[1..];
+
+    if data.len() < len {
+        return Err(AiffError::InvalidFormat);
+    }
+    let string_data = &data[..len];
+    *data = &data[len..];
+
+    if len%2 == 0 {
+        *data = &data[1..];
+    }
+    Ok(String::from_utf8_lossy(string_data).into_owned())
+}
