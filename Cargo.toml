@@ -1,17 +1,2 @@
 [workspace]
-members = ["m64", "aiff"]
-
-[package]
-name = "ultratracker"
-version = "0.1.0"
-authors = ["Delta-Psi <delta.psi00@gmail.com>"]
-edition = "2018"
-
-[dependencies]
-m64 = { path = "m64" }
-aiff = { path = "aiff" }
-cpal = "0.13.1"
-
-[dependencies.dasp]
-version = "0.11.0"
-features = ["signal", "interpolate", "interpolate-linear"]
+members = ["m64", "aiff", "m64play", "aiffplay"]
