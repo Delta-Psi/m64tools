@@ -7,7 +7,9 @@ const SAMPLE_RATE: u32 = 44_100;
 fn main() {
     let mut data = Vec::new();
     std::io::stdin().read_to_end(&mut data).unwrap();
-    let aiff = aiff::Aiff::read(&data).unwrap();
+    let aiff = aiff::AiffReader {
+        ..Default::default()
+    }.read(&data).unwrap();
 
     let (finished_send, finished_recv) = mpsc::sync_channel::<()>(0);
 

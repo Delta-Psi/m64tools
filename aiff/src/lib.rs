@@ -13,6 +13,23 @@ use std::collections::HashMap;
 use std::convert::TryInto;
 use byteorder::{BE, ByteOrder};
 
+#[derive(Debug, Default)]
+pub struct AiffReader {
+    //pub read_mark: bool,
+    //pub read_inst: bool,
+    //pub read_midi: bool,
+    //pub read_aesd: bool,
+    //pub read_appl: bool,
+    //pub read_comt: bool,
+    pub read_other: bool,
+}
+
+impl AiffReader {
+    pub fn read<'a>(&self, data: &'a [u8]) -> Result<Aiff<'a>> {
+        Aiff::read(data, &self)
+    }
+}
+
 #[derive(Debug)]
 pub struct Aiff<'a> {
     pub comm: CommonChunk,
@@ -27,7 +44,7 @@ pub struct Aiff<'a> {
 }
 
 impl<'a> Aiff<'a> {
-    pub fn read(data: &'a [u8]) -> Result<Self> {
+    pub(crate) fn read(data: &'a [u8], config: &AiffReader) -> Result<Self> {
         let mut data = data;
         let (form_id, form_data) = read_chunk(&mut data)?;
         if form_id.data() != b"FORM" {
@@ -56,7 +73,7 @@ impl<'a> Aiff<'a> {
                     ssnd = Some(SoundDataChunk::read(chunk_data)?);
                 }
 
-                _ => {
+                _ => if config.read_other {
                     other_chunks.insert(chunk_id, chunk_data);
                 }
             }
