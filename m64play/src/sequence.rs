@@ -7,10 +7,10 @@ pub struct Sequence {
 }
 
 impl Sequence {
-    pub fn load_json(base_path: impl AsRef<Path>) -> Vec<Self> {
+    pub fn load_json(base_path: &Path) -> Vec<Self> {
         use serde_json::Value;
 
-        let path = base_path.as_ref().join("sequences.json");
+        let path = base_path.join("sequences.json");
         let json = std::fs::read_to_string(path).unwrap();
 
         let v: Value = serde_json::from_str(&json).unwrap();
@@ -45,4 +45,3 @@ impl Sequence {
         std::fs::read(path).unwrap()
     }
 }
-

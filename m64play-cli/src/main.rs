@@ -8,17 +8,8 @@ fn list_sequences(files: DecompFiles) {
     }
 }
 
-fn main() {
-    let files = m64play::DecompFiles::load(std::env::var("DECOMP_SOUND_PATH").unwrap().as_ref());
-    
-    match std::env::args().nth(1) {
-        None => list_sequences(files),
-        //Some(seq_name) => play_sequence(files, seq_name),
-        _ => panic!(),
-    }
-
-    /*
-    let mut player = m64play::Player::new(44_100.0);
+fn play_sequence(files: DecompFiles, seq_name: &str) {
+    let mut player = files.new_player(seq_name, 44_100.0);
 
     let host = cpal::default_host();
     let device = host.default_output_device().unwrap();
@@ -37,5 +28,13 @@ fn main() {
     ).unwrap();
     stream.play().unwrap();
     std::thread::sleep(std::time::Duration::from_secs_f32(2.0));
-    */
+}
+
+fn main() {
+    let files = m64play::DecompFiles::load(std::env::var("DECOMP_SOUND_PATH").unwrap().as_ref());
+    
+    match std::env::args().nth(1) {
+        None => list_sequences(files),
+        Some(seq_name) => play_sequence(files, &seq_name),
+    }
 }
