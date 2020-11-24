@@ -103,10 +103,10 @@ fn parse_sound(value: &Value, sample_loader: &mut SampleLoader) -> Sound {
             tuning,
         }
     } else {
-        let value = value.as_array().unwrap();
+        let value = value.as_object().unwrap();
         Sound {
-            sample: sample_loader.load(value[0].as_str().unwrap()).0,
-            tuning: value[1].as_f64().unwrap() as f32,
+            sample: sample_loader.load(value["sample"].as_str().unwrap()).0,
+            tuning: value["tuning"].as_f64().unwrap() as f32,
         }
     }
 }
