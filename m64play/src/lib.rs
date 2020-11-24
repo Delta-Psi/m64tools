@@ -6,8 +6,8 @@ use sequence::Sequence;
 
 pub mod state;
 
-mod player;
-pub use player::Player;
+//mod player;
+//pub use player::Player;
 
 use std::path::{PathBuf, Path};
 
@@ -30,4 +30,11 @@ impl DecompFiles {
         SoundBank::load(&self.sound_path, sound_bank)
     }
     */
+
+    pub fn sound_path(&self) -> &Path {
+        &self.sound_path
+    }
+    pub fn sequences(&self) -> &[Sequence] {
+        &self.sequences
+    }
 }

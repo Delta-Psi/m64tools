@@ -1,9 +1,23 @@
 use cpal::traits::*;
+use m64play::DecompFiles;
+
+fn list_sequences(files: DecompFiles) {
+    println!("playable sequences:");
+    for seq in files.sequences() {
+        println!("- {}", seq.name);
+    }
+}
 
 fn main() {
-    //let files = m64play::DecompFiles::load(std::env::var("DECOMP_SOUND_PATH").unwrap());
-    //println!("{:#?}", files);
+    let files = m64play::DecompFiles::load(std::env::var("DECOMP_SOUND_PATH").unwrap().as_ref());
+    
+    match std::env::args().nth(1) {
+        None => list_sequences(files),
+        //Some(seq_name) => play_sequence(files, seq_name),
+        _ => panic!(),
+    }
 
+    /*
     let mut player = m64play::Player::new(44_100.0);
 
     let host = cpal::default_host();
@@ -23,4 +37,5 @@ fn main() {
     ).unwrap();
     stream.play().unwrap();
     std::thread::sleep(std::time::Duration::from_secs_f32(2.0));
+    */
 }
