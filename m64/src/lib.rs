@@ -1,10 +1,13 @@
 //! Referenced from https://hackmd.io/opEB-OmxRa26P8h8pA-x7w.
 
-pub mod channel;
-pub mod layer;
-pub mod sequence;
+mod channel;
+pub use channel::*;
 
-pub mod state;
+mod layer;
+pub use layer::*;
+
+mod sequence;
+pub use sequence::*;
 
 fn read_var(data: &[u8]) -> (u16, usize) {
     // check top bit of data[0]

@@ -1,2 +1,2 @@
 [workspace]
-members = ["m64", "aiff", "m64play", "aiffplay"]
+members = ["m64", "aiff", "m64play", "aiffplay", "m64play-cli"]

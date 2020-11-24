@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::Path;
 
 #[derive(Debug)]
 pub struct Sequence {
@@ -7,10 +7,13 @@ pub struct Sequence {
 }
 
 impl Sequence {
-    pub fn read_sequences_json(json: &str) -> Vec<Self> {
+    pub fn load_json(base_path: impl AsRef<Path>) -> Vec<Self> {
         use serde_json::Value;
 
-        let v: Value = serde_json::from_str(json).unwrap();
+        let path = base_path.as_ref().join("sequences.json");
+        let json = std::fs::read_to_string(path).unwrap();
+
+        let v: Value = serde_json::from_str(&json).unwrap();
         let sequence_map = v.as_object().unwrap();
 
         sequence_map.iter().filter_map(|(k, v)| {
@@ -36,23 +39,10 @@ impl Sequence {
             })
         }).collect()
     }
-}
 
-fn main() {
-    let decomp_sound_path: PathBuf = std::env::var("DECOMP_SOUND_PATH").unwrap().into();
-    let sequences_path = decomp_sound_path.join("sequences.json");
-    let sequences_json = std::fs::read_to_string(sequences_path).unwrap();
-    let sequences = Sequence::read_sequences_json(&sequences_json);
-
-    let mut siv = cursive::default();
-
-    use cursive::views::SelectView;
-    let mut sequence_list = SelectView::new();
-    for seq in &sequences {
-        sequence_list.add_item(&seq.name, ());
+    pub fn read_m64(&self, base_path: &Path) -> Vec<u8> {
+        let path = base_path.join(format!("sequences/us/{}.m64", self.name));
+        std::fs::read(path).unwrap()
     }
-    siv.add_layer(sequence_list);
-
-    siv.add_global_callback('q', |s| s.quit());
-    siv.run();
 }
+

@@ -6,12 +6,6 @@ edition = "2018"
 
 [dependencies]
 m64 = { path = "../m64" }
-cpal = "0.13.1"
-
-cursive = "0.15.0"
-#nfd2 = "0.2.3"
-#directories = "3.0.1"
-
-#toml = "0.5.6"
+bitflags = "1.2.1"
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-#serde = { version = "1.0", features = ["derive"] }

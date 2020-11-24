@@ -1,0 +1,9 @@
+[package]
+name = "m64play-cli"
+version = "0.1.0"
+authors = ["Delta-Psi <delta.psi00@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+m64play = { path = "../m64play" }
+cpal = "0.13.1"
