@@ -66,6 +66,10 @@ impl SequencePlayer {
 
     // ported from sequence_player_process_sequence
     pub fn process(&mut self, data: &[u8]) {
+        if self.finished {
+            return;
+        }
+
         if self.muted && self.mute_behavior.contains(MuteBehavior::STOP_SCRIPT) {
             return;
         }

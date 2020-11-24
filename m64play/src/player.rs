@@ -24,13 +24,21 @@ impl Player {
         }
     }
 
-
     pub fn fill(&mut self, data: &mut [f32]) {
         for i in 0 .. data.len() / 2 {
             let f = self.next();
             data[i*2] = f[0];
             data[i*2 + 1] = f[1];
         }
+    }
+
+    /// Call this 240 times per second.
+    pub fn process(&mut self) {
+        self.state.process(&self.m64_data);
+    }
+
+    pub fn finished(&self) -> bool {
+        self.state.finished
     }
 }
 
